@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+import s3.views as s3_view
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('stock_list/', s3_view.StockListView.as_view()) 
 ]
