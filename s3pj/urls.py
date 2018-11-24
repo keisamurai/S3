@@ -20,5 +20,9 @@ import s3.views as s3_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('stock_list/', s3_view.StockListView.as_view()) 
+    path('code_master/', s3_view.MasterListView.as_view()),
+    path('code_master/<int:query_code>/', s3_view.StockListView.as_view()),
+    path('stock_list/', s3_view.StockListView.as_view()),
+    path('sentiment_list/', s3_view.SentimentListView.as_view()),
+    # path('', s3_view.index.as_view()),
 ]

@@ -23,7 +23,7 @@ def setting_Django():
     # スクリプトディレクトリに移動
     cws = os.path.dirname(os.path.abspath(__file__))
     os.chdir(cws)
-    data_path = './data/9984_2018.csv'
+    data_path = './data/stock/9984_2018.csv'
     # 株価データ取得
     stock_data = pd.read_csv(
         data_path,
@@ -44,6 +44,10 @@ def setting_Django():
            adjust=stock_data['adjustment'][i],
         )
         i +=1
+
+    """
+    センチメントデータの反映
+    """
 
 if __name__ == '__main__':
     setting_Django()
