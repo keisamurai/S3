@@ -139,9 +139,9 @@ if __name__ == '__main__':
     NLQ='dai-ichi-life'
     SSD='20181011'
     SED='20181012'
-    USERNAME='a0766d60-1d62-4cbc-abb9-1542a790bdca' # auth username
-    PASS='Sfi1P1AhZFGk'                             # auth password
-    OUTFILE='testMakeSentimentData.csv'
+    USERNAME='' # auth username
+    PASS=''  # auth password
+    OUTFILE=''
 
     MakeSentimentData = MakeSentimentDataLoopAndOutCSV()
     result = MakeSentimentData.AggregateSentimentData(NLQ, SSD, SED, USERNAME, PASS, OUTFILE)

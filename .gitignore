@@ -1,0 +1,4 @@
+# test/ is not under git resource control
+test/
+# others is not under git resource control
+others/
