@@ -39,9 +39,9 @@ def setting_Django():
            opening=stock_data['opening'][i],
            high=stock_data['high'][i],
            low=stock_data['low'][i],
-           ending=stock_data['closing'][i],
+           closing=stock_data['closing'][i],
            volume=stock_data['volume'][i],
-           adjust=stock_data['adjustment'][i],
+           adjustment=stock_data['adjustment'][i],
         )
         i +=1
 

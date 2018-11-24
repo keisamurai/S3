@@ -33,11 +33,11 @@ class Stock(models.Model):
     # 安値
     low = models.FloatField()
     # 終値
-    ending = models.FloatField()
+    closing = models.FloatField()
     # 終値
     volume = models.IntegerField()
     # 調整値
-    adjust = models.FloatField()
+    adjustment = models.FloatField()
 
 class Sentiment(models.Model):
     """
