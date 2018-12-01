@@ -29,7 +29,13 @@ def setting_Django():
         data_path,
         header=1,
         encoding='ms932',
-        names=['date', 'opening', 'high', 'low', 'closing', 'volume', 'adjustment']
+        names=['date',
+               'opening',
+               'high',
+               'low',
+               'closing',
+               'volume',
+               'adjustment']
     )
 
     for i in range(len(stock_data)):

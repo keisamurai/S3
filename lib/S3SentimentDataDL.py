@@ -9,7 +9,7 @@ import requests
 import json
 
 # 個別モジュール
-import DateCulc
+import S3DateCulc as dc
 
 class MakeSentimentData:
     def __init__(self):
@@ -35,8 +35,8 @@ class MakeSentimentData:
         """
         # 変数設定
         VERSION='2018-08-01'                            # discovery API version
-        SEARCH_START_DATE=DateCulc.DateUTime(SSD)       # date for query
-        SEARCH_END_DATE=DateCulc.DateUTime(SED)         # date for query
+        SEARCH_START_DATE=dc.DateUTime(SSD)       # date for query
+        SEARCH_END_DATE=dc.DateUTime(SED)         # date for query
         QUERY_NLQ=NLQ                                   # Query word for Natural Language Query
         URL_NEWS='https://gateway.watsonplatform.net/discovery/api/v1/environments/system/collections/news-en/query'
 
@@ -97,11 +97,11 @@ class MakeSentimentDataLoopAndOutCSV(MakeSentimentData):
         __NEGATIVE=3
 
         # 期間取得
-        duration = DateCulc.DateDiff(SSD, SED)
+        duration = dc.DateDiff(SSD, SED)
         # 日付ループ
         for day in range(duration + 1):
             # 照会する日付取得
-            query_day = DateCulc.DateAdd(SSD, day)
+            query_day = dc.DateAdd(SSD, day)
             # 0埋めした日付文字列を生成
             query_day = str(query_day.year) + '{:02}'.format(query_day.month) + '{:02}'.format(query_day.day)
             # 親クラスのAggregateSentimentDataから出力を受け取る
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     NLQ='dai-ichi-life'
     SSD='20181011'
     SED='20181012'
-    USERNAME='' # auth username
+    USERNAME= ''# auth username
     PASS=''  # auth password
     OUTFILE=''
 
