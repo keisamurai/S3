@@ -2,3 +2,5 @@
 test/
 # others is not under git resource control
 others/
+# data/stock is not under git resource control
+data/stock

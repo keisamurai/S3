@@ -74,13 +74,10 @@ def update_or_insert_stock_data(pjname, tbl_name, stock_data, stock_code):
 
     django.setup()
 
-    # fromでエラーで表示されるが、問題なく実行できる
     from s3.models import Stock
 
     if tbl_name == TBL_STOCK_NAME:
         try:
-            print("a")
-            print(len(stock_data))
             for i in range(len(stock_data)):
                 rtn = Stock.objects.update_or_create(
                     code=stock_code,
@@ -92,7 +89,6 @@ def update_or_insert_stock_data(pjname, tbl_name, stock_data, stock_code):
                     volume=stock_data['volume'][i],
                     adjustment=stock_data['adjustment'][i],
                 )
-                print(rtn)
         except:
             print("[:ERROR:] getting table data failed")
             return rtn

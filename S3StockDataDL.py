@@ -16,6 +16,7 @@ from selenium import webdriver
 
 from lib import S3DBConnect
 from lib import S3Stats
+from lib import S3Util
 
 
 def DLStockData(code_master, out_dir):
@@ -29,17 +30,15 @@ def DLStockData(code_master, out_dir):
     rtn = True
 
     # ダウンロード先ディレクトリを設定
-    dl_dir = out_dir
+    dl_dir = os.path.abspath(out_dir)
     print(dl_dir)
-    environ = os.environ
+
     # 環境変数からchromedriverのパスを取得取得
+    environ = os.environ
     CHROME_DRIVER_PATH = environ['CHROME_DRIVER_PATH']
     URL_BASE = "https://kabuoji3.com/stock/"
     URL_YEAR = '2018'
     WAIT_SEC = 10
-    # カレントディレクトリを取得
-    cwd = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(cwd)
 
     try:
         # //////////////////////////////////
@@ -48,7 +47,7 @@ def DLStockData(code_master, out_dir):
         chop = webdriver.ChromeOptions()
         prefs = {"download.default_directory": dl_dir}   # ダウンロード先設定
         chop.add_experimental_option("prefs", prefs)
-        chop.add_argument('--ignore-certificate-errors')  # SSL対策
+        # chop.add_argument('--ignore-certificate-errors')  # SSL対策
         # chop.add_argument('--headless') # headless 設定
         # chop.add_argument('--disable-gpu') # gpu error 対策
         # chop.add_argument('--window-size=1024,1000')
@@ -98,7 +97,11 @@ def UPDorINSStockData(input_dir):
 
     rtn = False
     # inputフォルダのファイルを取得
-    input_dir = '.' + input_dir
+    if S3Util.add_dot_dir_path(input_dir):
+        input_dir = S3Util.add_dot_dir_path(input_dir)
+    else:
+        return rtn
+
     glob_dir = input_dir + '/*'
     files = glob.glob(glob_dir)
     for file_path in files:
@@ -134,7 +137,7 @@ if __name__ == '__main__':
     PJ_NAME = 's3pj'
     TBL_CODE_MASTER_NAME = 'Code_Master'
     TBL_STOCK_NAME = 'Stock'
-    OUT_DIR = '/data/stock'
+    OUT_DIR = './data/stock'
     PJ_ROOT = 'S3_PJ_ROOT'
 
     cwd = os.path.dirname(os.path.abspath(__file__))
@@ -148,17 +151,17 @@ if __name__ == '__main__':
 
     # dbに接続してテーブルのデータを受け取る
     tbl_data = S3DBConnect.get_db_object(PJ_NAME, TBL_CODE_MASTER_NAME)
+    if len(tbl_data) == 0:
+        print("[:ERROR:] Something wrong was happen while getting code_master data")
+
     # 銘柄コードをもとにデータをダウンロードする
-    if not DLStockData(tbl_data, out_dir):
-        print(
-            '[:ERROR:] Something wrong was happen while stock data downloading'
-            )
-    # ダウンロード処理のout_dirがDB更新のinput_dir
-    input_dir = out_dir
+    # if not DLStockData(tbl_data, out_dir):
+    #     print('[:ERROR:] Something wrong was happen while stock data downloading')
+
     # 株価データを更新する
-    UPDorINSStockData(out_dir)
+    if not UPDorINSStockData(out_dir):
+        print('[:ERROR:] Something wrong was happen while stock data updating')
 
     # csvファイルを削除する
-    rm_path = cwd + "/data/stock/"
-    os.chdir(rm_path)
-    os.remove("*.csv")
+    # rm_path = cwd + "/data/stock/"
+    # S3Util.del_all_files_in_dir(rm_path)

@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 class Code_Master(models.Model):
     """
@@ -12,13 +13,14 @@ class Code_Master(models.Model):
     # 会社名(英語)
     en_name = models.CharField(max_length=128)
 
+
 class Stock(models.Model):
     """
     description: 管理対象銘柄の株価データ
     """
-    
-    BIZ_DAY = 0 #営業日
-    NON_BIZ_DAY = 1 #非営業日
+
+    BIZ_DAY = 0  # 営業日
+    NON_BIZ_DAY = 1  # 非営業日
 
     # 銘柄コード
     code = models.CharField(max_length=4)
@@ -39,13 +41,14 @@ class Stock(models.Model):
     # 調整値
     adjustment = models.FloatField()
 
+
 class Sentiment(models.Model):
     """
     description: 管理対象銘柄のセンチメントデータ
     """
-    #銘柄コード
+    # 銘柄コード
     code = models.CharField(max_length=4)
-    #会社名
+    # 会社名
     name = models.CharField(max_length=128)
     # データ日付
     date = models.DateField()
