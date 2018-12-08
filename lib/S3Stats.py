@@ -13,6 +13,7 @@ import os
 import sys
 import pandas as pd
 import traceback
+import glob
 
 # 個別作成モジュール
 from lib import S3DateCulc as dc
@@ -382,7 +383,7 @@ class S3StatsCSV(S3Stats):
             # センチメントデータの取得
             senti_data = pd.read_csv(
                 self.SentiPath,
-                header=None,
+                header=0,
                 names=['company name',
                        'date',
                        'positive',

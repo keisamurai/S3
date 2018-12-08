@@ -26,7 +26,7 @@ class StockListView(TemplateView):
         # コードマスタから、照会されているデータだけ抽出する
         code_master = Code_Master.objects.filter(code=kwargs['query_code'])
         # 株価データから、照会されているデータだけ抽出する
-        stock = Stock.objects.filter(code=kwargs['query_code']) # DBからオブジェクトを取得
+        stock = Stock.objects.filter(code=kwargs['query_code'])  # DBからオブジェクトを取得
 
         # 日本語名を取得
         for cd in code_master:

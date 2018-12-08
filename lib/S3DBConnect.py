@@ -1,8 +1,14 @@
-# ///////////////////////////////////////////////////////
-# // name         : S3DBConnect.py
-# // description　: djangoのデータベースにアクセスし、オブジェクト
-# //              : を返す
-# ///////////////////////////////////////////////////////
+# ////////////////////////////////////
+# // StockAndSentimentSystem: DBConnect
+# //   ///////   ///////
+# //  ///__  // ///__  //
+# // | //  \__/|__/  \ //
+# // |  //////    ///////
+# //  \____  //  |___  //
+# //  ///  \ // ///  \ //
+# // |  ///////|  ///////
+# //  \______/  \______/
+# ////////////////////////////////////
 import sys
 import os
 import django
@@ -25,7 +31,6 @@ def get_db_object(pjname, tbl_name):
 
     django.setup()
 
-    # fromでエラーで表示されるが、問題なく実行できる
     from s3.models import Code_Master, Stock, Sentiment
 
     if tbl_name == TBL_CODE_MASTER_NAME:
@@ -60,7 +65,7 @@ def update_or_insert_stock_data(pjname, tbl_name, stock_data, stock_code):
                 : データが存在しなければINSERTする
     input       : pjname -> PJ名(s3pj)
                 : tbl_name -> テーブル名
-                : stock_data -> 株価データ
+                : stock_data -> 株価データ(DataFrame)
                 : stock_code -> 対象株価データの銘柄コード
     output      : true/false
     """
@@ -95,5 +100,53 @@ def update_or_insert_stock_data(pjname, tbl_name, stock_data, stock_code):
     else:
         print("[:ERROR:] getting table data failed")
         return rtn
+
+    return rtn
+
+
+def update_or_insert_sentiment_data(pjname, tbl_name, sentiment_data, stock_code):
+    """
+    description : センチメントデータのテーブルにアクセスし、データが存在すればUPDATE,
+                : データが存在しなければINSERTする
+    input       : pjname -> PJ名(s3pj)
+                : tbl
+                : stock_data -> センチメントデータ(DataFrame)
+                : stock_code -> 対象センチメントデータの銘柄コード
+    output      : true/false
+    """
+    TBL_SENTIMENT_NAME = "Sentiment"
+
+    rtn = False
+
+    # カレントディレクトリを退避
+    cwd = os.getcwd()
+    sys.path.append(pjname)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "{}.settings".format(pjname))
+    os.chdir(os.environ['S3_PJ_ROOT'])
+
+    django.setup()
+
+    from s3.models import Sentiment
+
+    if tbl_name == TBL_SENTIMENT_NAME:
+        for i in range(len(sentiment_data)):
+            try:
+                rtn = Sentiment.objects.update_or_create(
+                    code=stock_code,
+                    name=sentiment_data['company name'][i],
+                    date=sentiment_data['date'][i],
+                    positive=sentiment_data['positive'][i],
+                    neutral=sentiment_data['neutral'][i],
+                    negative=sentiment_data['negative'][i]
+                )
+            except:
+                print("[:ERROR:] getting table data failed")
+                return rtn
+    else:
+        print("[:ERROR:] getting table data failed")
+        return rtn
+
+    # カレンとディレクトリを戻す
+    os.chdir(cwd)
 
     return rtn

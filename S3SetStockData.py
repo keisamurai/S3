@@ -1,7 +1,7 @@
 # ///////////////////////////////////////
-# // name: stockdata_download.py
+# // name: S3SetStockData.py
 # // description: ウェブページから株価情報を
-# //   ダウンロードする
+# //   ダウンロードし、Stockテーブルをアップデートする
 # // conditions:
 # //   1.スクリプト配置フォルダに
 # //   銘柄情報のcsvファイルが配置されていること
