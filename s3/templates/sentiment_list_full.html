@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Stock List{% endblock %}
+{% block title %}Sentiment List{% endblock %}
 {% load staticfiles %}
 
       {% block body %}
@@ -10,34 +10,30 @@
               <div class="panel panel-default full-width">
 
                 <div class="panel-heading">
-                　会社名：{{jp_name}}({{query_code}}) 
+                  Edit Help
                 </div>
 
                 <div class="panel-body full-width full-height">
-                  <table id="stock-list-table" class="table table-striped table-bordered table-hover dataTable no-footer dtr-inline full-width">
+                  <table id="sentiment-list-table" class="table table-striped table-bordered table-hover dataTable no-footer dtr-inline full-width">
                     <thead>
                       <tr>
                         <th>銘柄コード</th>
+                        <th>会社名</th>
                         <th>日付</th>
-                        <th>開始値</th>
-                        <th>高値</th>
-                        <th>安値</th>
-                        <th>終値</th>
-                        <th>出来高</th>
-                        <th>調整値</th>
+                        <th>ポジティブ</th>
+                        <th>ニュートラル</th>
+                        <th>ネガティブ</th>
                       </tr>
                     </thead>
                     <tbody>
-                    {% for sd in stock %}
+                    {% for st in sentiment %}
                       <tr>
-                        <td>{{sd.code}}</td>
-                        <td>{{sd.date}}</td>
-                        <td>{{sd.opening}}</td>
-                        <td>{{sd.high}}</td>
-                        <td>{{sd.low}}</td>
-                        <td>{{sd.closing}}</td>
-                        <td>{{sd.volume}}</td>
-                        <td>{{sd.adjustment}}</td>
+                        <td>{{st.code}}</td>
+                        <td>{{st.name}}</td>
+                        <td>{{st.date}}</td>
+                        <td>{{st.positive}}</td>
+                        <td>{{st.neutral}}</td>
+                        <td>{{st.negative}}</td>
                       </tr>
                     {% endfor %}
                     </tbody>
@@ -51,9 +47,9 @@
       </div>
       <script>
         $(document).ready(function() {
-            $('#stock-list-table').DataTable({
+            $('#sentiment-list-table').DataTable({
                 responsive: true,
-                // sort機能の有効化
+                // sort機能の無効化
                 ordering: true,
                 // ページの表示件数を変更する
                 displayLength: 20,

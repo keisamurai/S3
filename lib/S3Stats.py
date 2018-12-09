@@ -13,6 +13,7 @@ import os
 import sys
 import pandas as pd
 import traceback
+import glob
 
 # 個別作成モジュール
 from lib import S3DateCulc as dc
@@ -70,7 +71,7 @@ class S3Stats:
         """
         pass
 
-    def mergeSS(self, senti_data, stock_data):
+    def mergeSS(self, stock_data, senti_data):
         """
         description : 株価とセンチメントデータを統合する
         args        : senti_data -> センチメントデータ
@@ -78,7 +79,12 @@ class S3Stats:
         return      : merged_data  -> センチメントデータと株価データの統合データ
         # 基底クラスにもっていっていいかも
         """
-        merged_data = pd.merge(senti_data, stock_data)
+
+        # 株価データとセンチメントデータのcode列が重複してmerge時に
+        # 強制的に列名がcode_xとcode_yになってしまうので事前にcode列を一方から削除
+        senti_data = senti_data.drop('code', axis='columns')
+
+        merged_data = pd.merge(stock_data, senti_data, on='date')
         return merged_data
 
     def ChangeRateData(self, merged_data):
@@ -95,6 +101,11 @@ class S3Stats:
         # 必要な列を取得する
         needed_data = merged_data.loc[:, ['opening', 'closing', 'positive', 'neutral', 'negative']]
         changerate_data = needed_data.pct_change()
+
+        # pct_change()を利用することで、時点0のデータがNaNになるため、
+        # 0で穴埋めする
+        changerate_data = changerate_data.fillna(0)
+
         return changerate_data
 
     def shiftData(self, data, shift_list, shift=-1):
@@ -382,7 +393,7 @@ class S3StatsCSV(S3Stats):
             # センチメントデータの取得
             senti_data = pd.read_csv(
                 self.SentiPath,
-                header=None,
+                header=0,
                 names=['company name',
                        'date',
                        'positive',

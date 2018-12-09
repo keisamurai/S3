@@ -1,13 +1,14 @@
-#////////////////////////////////////////
-#// name: DateCulc.py
-#// description: 日付計算用
-#////////////////////////////////////////
+# ////////////////////////////////////////
+# // name: S3DateCulc.py
+# // description: 日付計算用
+# ////////////////////////////////////////
 import datetime
 
 NUM_DAY = 3             # 受け取る引数の数
 NUM_DAY_LEN = 8         # 引数の文字列
 NUM_DAY_LEN_UNIX = 10   # Unix日付(YYYY-MM-DD)の文字数
 NUM_DAY_LEN_SLASH = 10  # 日付(YYYY/MM/DD)の文字数
+
 
 def DateCheck(Date):
     """
@@ -23,29 +24,30 @@ def DateCheck(Date):
             datetime.datetime.strptime(Date, '%Y%m%d')
             return True
         except ValueError:
-            return False 
-    # パターン2 
+            return False
+    # パターン2
     if len(Date) == NUM_DAY_LEN_UNIX:
         try:
             datetime.datetime.strptime(Date, '%Y-%m-%d')
             return True
         except ValueError:
-            return False 
+            return False
 
-    # パターン3 
+    # パターン3
     if len(Date) == NUM_DAY_LEN_SLASH:
         try:
             datetime.datetime.strptime(Date, '%Y/%m/%d')
             return True
         except ValueError:
-            return False 
+            return False
 
     return False
+
 
 def DateConv(day, mode=0):
     """
     description: datetime型日付を受け取り、文字列にして返却する
-    args       : mode 
+    args       : mode
                :  0 -> 日付をYYYYMMDDで返す
                :  1 -> 日付をYYYY-MM-DDで返す
                :  2 -> 日付をYYYY/MM/DDで返す
@@ -60,12 +62,13 @@ def DateConv(day, mode=0):
     else:
         return False
 
+
 def CharConv(day, mode=0):
     """
     description : 日付の文字列を日付型や別の文字列にして返す
-    args        : day -> 文字型の日付 
-                : mode 
-                :   0 -> (default) 文字列を日付型にして返す 
+    args        : day -> 文字型の日付
+                : mode
+                :   0 -> (default) 文字列を日付型にして返す
                 :   1 -> 日付の文字列について、YYYYMMDDはYYYY-MM-DDに、
                 :        YYYY-MM-DDはYYYYMMDDに変換する
     return      : 日付(datetime型) or False
@@ -77,17 +80,17 @@ def CharConv(day, mode=0):
 
     # MODE1:文字列を日付型にして返す場合
     if mode == 0:
-        # YYYYMMDDの可能性をチェック    
+        # YYYYMMDDの可能性をチェック
         try:
             rtn = datetime.datetime.strptime(day, '%Y%m%d')
-            return rtn 
+            return rtn
         except ValueError:
-            # YYYY-MM-DDの可能性をチェック    
+            # YYYY-MM-DDの可能性をチェック
             try:
                 rtn = datetime.datetime.strptime(day, '%Y-%m-%d')
                 return rtn
             except ValueError:
-                # YYYY/MM/DDの可能性をチェック    
+                # YYYY/MM/DDの可能性をチェック
                 try:
                     rtn = datetime.datetime.strptime(day, '%Y/%m/%d')
                     return rtn
@@ -95,9 +98,9 @@ def CharConv(day, mode=0):
                     return rtn
     # MODE2:文字列を別の形の文字列にして返す場合
     elif mode == 1:
-        # YYYYMMDDをYYYY-MM-DD形式にする 
+        # YYYYMMDDをYYYY-MM-DD形式にする
         if len(day) == NUM_DAY:
-            rtn =  day[0:4] + day[4:6] + day[6:8]
+            rtn = day[0:4] + day[4:6] + day[6:8]
             return rtn
 
         # YYYY-MM-DDをYYYYYMMDD形式にする
@@ -106,7 +109,8 @@ def CharConv(day, mode=0):
             return rtn
 
     return rtn
-        
+
+
 def DateDiff(StartDay, EndDay):
     """
     description : 開始日と終了日を受け取り、日付の差分を返す
@@ -115,7 +119,7 @@ def DateDiff(StartDay, EndDay):
                 :     YYYYMMDD   形式
                 :     YYYY-MM-DD 形式
                 :     YYYY/MM/DD 形式
-    return      : datetime型日付 or False 
+    return      : datetime型日付 or False
     """
     rtn = False
     # args check
@@ -126,13 +130,13 @@ def DateDiff(StartDay, EndDay):
             rtn = (End - Start).days
             return rtn
 
-        if len(StartDay) == NUM_DAY_LEN_UNIX and len(EndDay) == NUM_DAY_LEN_UNIX:        
+        if len(StartDay) == NUM_DAY_LEN_UNIX and len(EndDay) == NUM_DAY_LEN_UNIX:
             # StartDayとEndDayが'-'を含むかチェック
             if StartDay.count('-') > 0 and EndDay.count('-') > 0:
                 Start = datetime.datetime.strptime(StartDay, '%Y-%m-%d')
                 End = datetime.datetime.strptime(EndDay, '%Y-%m-%d')
                 rtn = (End - Start).days
-                return rtn 
+                return rtn
 
         if len(StartDay) == NUM_DAY_LEN_SLASH and len(EndDay) == NUM_DAY_LEN_SLASH:
             # StartDayとEndDayが'/'を含むかチェック
@@ -140,9 +144,9 @@ def DateDiff(StartDay, EndDay):
                 Start = datetime.datetime.strptime(StartDay, '%Y/%m/%d')
                 End = datetime.datetime.strptime(EndDay, '%Y/%m/%d')
                 rtn = (End - Start).days
-                return rtn 
+                return rtn
 
-    return rtn        
+    return rtn
 
 
 def DateAdd(StartDay, AddDay):
@@ -154,11 +158,12 @@ def DateAdd(StartDay, AddDay):
     """
     if len(StartDay) != NUM_DAY_LEN:
         print('[:ERROR:] Your input:={0} but must be YYYYYMMDD format'.format(StartDay))
-    
+
     # get datetime from StartDay(str)
     Start = datetime.datetime.strptime(StartDay, '%Y%m%d')
     result = Start + datetime.timedelta(days=AddDay)
     return result
+
 
 def DateUTime(Date):
     """
@@ -171,10 +176,9 @@ def DateUTime(Date):
     # パターン１
     if len(Date) == NUM_DAY_LEN and DateCheck(Date):
         return Date[0:4] + '-' + Date[4:6] + '-' + Date[6:8] 
-    #　パターン２
+    # パターン２
     if len(Date) == NUM_DAY_LEN_UNIX and DateCheck(Date):
         return datetime.datetime.strptime(Date, '%Y-%m-%d')
-
 
 
 def DateList(start, end):
@@ -184,18 +188,18 @@ def DateList(start, end):
        start -> datetime型日付
        end   -> datetime型日付
     """
-    day_list = [] 
-    diff = DateDiff(DateConv(start), DateConv(end)) 
+    day_list = []
+    diff = DateDiff(DateConv(start), DateConv(end))
     # startとendの差分回数回す
     i = 0
     while i < diff + 1:
         if i == 0:  # 初回は加算しないでlistに追加する
             date = DateConv(start, 1)
             day_list.append(date)
-        else: # 初回以外は1日加算してlistに追加する
+        else:  # 初回以外は1日加算してlistに追加する
             start = DateAdd(DateConv(start), 1)
             # YYYY-MM-DD形式の文字列に変換
-            date = DateConv(start, 1) 
+            date = DateConv(start, 1)
             day_list.append(date)
         i += 1
 
@@ -209,8 +213,8 @@ if __name__ == "__main__":
     print('DateAdd:{0}'.format(b))
     c = DateUTime('20181110')
     print('DateUTime:{0}'.format(c))
-    d1 = '20181110' # normal
-    d2 = '2018-11-10' # error
+    d1 = '20181110'  # normal
+    d2 = '2018-11-10'  # error
     print('20181110 is:{0}, 2018-11-10 is:{1}'.format(DateCheck(d1), DateCheck(d2)))
     print('---DayList---')
     start = datetime.datetime.strptime('20181010', '%Y%m%d')
@@ -219,4 +223,4 @@ if __name__ == "__main__":
     print(day_list)
     print('---DayList---')
     e = CharConv('2018-10-10', mode=1)
-    print(e)        
+    print(e)

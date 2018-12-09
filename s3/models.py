@@ -51,7 +51,7 @@ class Sentiment(models.Model):
     # 会社名
     name = models.CharField(max_length=128)
     # データ日付
-    date = models.DateField()
+    date = models.CharField(max_length=10)
     # positive
     positive = models.IntegerField()
     # neutral

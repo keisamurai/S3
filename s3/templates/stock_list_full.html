@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Stock List{% endblock %}
+{% load staticfiles %}
+
+      {% block body %}
+      <div id="wrapper">
+        <div id="page-wrapper">
+          <div class="row">
+            <div class="col-lg-6 full-width margin-top-20percent" >
+              <div class="panel panel-default full-width">
+
+                <div class="panel-heading">
+                  株価：全銘柄
+                </div>
+
+                <div class="panel-body full-width full-height">
+                  <table id="stock-list-table" class="table table-striped table-bordered table-hover dataTable no-footer dtr-inline full-width">
+                    <thead>
+                      <tr>
+                        <th>銘柄コード</th>
+                        <th>日付</th>
+                        <th>開始値</th>
+                        <th>高値</th>
+                        <th>安値</th>
+                        <th>終値</th>
+                        <th>出来高</th>
+                        <th>調整値</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for sd in stock %}
+                      <tr>
+                        <td>{{sd.code}}</td>
+                        <td>{{sd.date}}</td>
+                        <td>{{sd.opening}}</td>
+                        <td>{{sd.high}}</td>
+                        <td>{{sd.low}}</td>
+                        <td>{{sd.closing}}</td>
+                        <td>{{sd.volume}}</td>
+                        <td>{{sd.adjustment}}</td>
+                      </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        $(document).ready(function() {
+            $('#stock-list-table').DataTable({
+                responsive: true,
+                // sort機能の有効化
+                ordering: true,
+                // ページの表示件数を変更する
+                displayLength: 20,
+            });
+        });
+      </script>
+      {% endblock %}/html>
