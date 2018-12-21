@@ -11,6 +11,8 @@
 import sys
 import os
 import pandas
+import glob
+import re
 
 from selenium import webdriver
 
@@ -80,6 +82,40 @@ def DLStockData(code_master, out_dir):
     return rtn
 
 
+def comp_stock_csv(code_list, csv_dir_path):
+    """csv ファイル中のデータを線形補完する。
+
+    Args:
+        code_list (iterator): code_master テーブルのデータ
+        csv_dir_path (str path): 編集対象のcsvファイルが保管されているフォルダパス(最終文字に/をつけない)
+    Return:
+        True/False
+    """
+    rtn = False
+
+    s3stats = S3Stats.S3StatsCSV()
+
+    for code_data in code_list:
+        # code取得
+        code = str(code_data.code)
+        # codeに関連するファイルを取得
+        search_path = csv_dir_path + '/' + code + '*'
+        csv_file_name = csv_dir_path + '/' + code + '_2018.csv'
+        try:
+            csv_file_list = glob.glob(search_path)
+            stock_data = s3stats.comp_stock_na_csv_file(csv_file_list[0])
+            stock_data.to_csv(
+                csv_file_name,
+                index=False,
+            )
+        except:
+            return rtn
+
+    rtn = True
+
+    return rtn
+
+
 def UPDorINSStockData(input_dir):
     """
     description : csvから株価データを取得し、Stockテーブルに存在すればUPDATE、
@@ -114,7 +150,7 @@ def UPDorINSStockData(input_dir):
         # Windowsのファイルパス対策
         file_path = repr(file_path).replace('\\\\', '/')
         Stats = S3Stats.S3StatsCSV(StockPath=file_name)
-        stock_data = Stats.getStockData(path=input_dir)
+        stock_data = Stats.get_stock_data(path=input_dir, header_num=0)
 
         # ////////////////
         # // 株価データ更新
@@ -155,8 +191,12 @@ if __name__ == '__main__':
         print("[:ERROR:] Something wrong was happen while getting code_master data")
 
     # 銘柄コードをもとにデータをダウンロードする
-    # if not DLStockData(tbl_data, out_dir):
-    #     print('[:ERROR:] Something wrong was happen while stock data downloading')
+    if not DLStockData(tbl_data, out_dir):
+        print('[:ERROR:] Something wrong was happen while stock data downloading')
+
+    # 取得したデータを線形補完する
+    if not comp_stock_csv(tbl_data, out_dir):
+        print('[:ERROR:] Something wrong was happen while stock data completing')
 
     # 株価データを更新する
     if not UPDorINSStockData(out_dir):

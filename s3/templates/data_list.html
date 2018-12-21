@@ -10,7 +10,7 @@
 
         <h1 class="page-header">会社名：{{jp_name}}({{query_code}})</h1>
 
-        <!--Chart Area-->
+        <!--Chart  and Table Area-->
         <div class="row">
           <div class="col-lg-6">
             <div class="panel panel-default">
@@ -35,8 +35,10 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="col-lg-12">
+        <div class="row">
+          <div class="col-lg-7">
             <div class="panel panel-default">
               <div class="panel panel-heading">
                 <i class="fa fa-bar-chart" aria-hidden="true"></i>
@@ -48,264 +50,320 @@
             </div>
           </div>
 
-          <!--End of Chart Area-->
-
-          <div class="panel panel-heading">
-            <i class="fa fa-table fa-fw" aria-hidden="true"></i>
-            株価明細
+          <div class="col-lg-5">
+            <div class="panel panel-default">
+              <div class="panel panel-heading">
+                <i class="fa fa-bar-table" aria-hidden="true"></i>
+                相関係数
+              </div>
+              <div class="panel panel-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th> </th>
+                        {% for col_name in corr %}
+                        <th>{{col_name}}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>opening</td>
+                        {% for op in corr_opening %}
+                        <td>{{op}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>closing</td>
+                        {% for cl in corr_closing %}
+                        <td>{{cl}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>positive</td>
+                        {% for po in corr_positive %}
+                        <td>{{po}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>neutral</td>
+                        {% for neu in corr_neutral %}
+                        <td>{{neu}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>negative</td>
+                        {% for neg in corr_negative %}
+                        <td>{{neg}}</td>
+                        {% endfor %}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="panel-body full-width full-height">
-            <table id="stock-list-table" class="table table-striped table-bordered table-hover dataTable no-footer dtr-inline full-width">
-              <thead>
-                <tr>
-                  <th>銘柄コード</th>
-                  <th>日付</th>
-                  <th>開始値</th>
-                  <th>高値</th>
-                  <th>安値</th>
-                  <th>終値</th>
-                  <th>出来高</th>
-                  <th>調整値</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for sd in stock %}
-                <tr>
-                  <td>{{sd.code}}</td>
-                  <td>{{sd.date}}</td>
-                  <td>{{sd.opening}}</td>
-                  <td>{{sd.high}}</td>
-                  <td>{{sd.low}}</td>
-                  <td>{{sd.closing}}</td>
-                  <td>{{sd.volume}}</td>
-                  <td>{{sd.adjustment}}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
         </div>
       </div>
+
+
+      <div class="panel panel-heading">
+        <i class="fa fa-table fa-fw" aria-hidden="true"></i>
+        株価明細
+      </div>
+      <div class="panel-body full-width full-height">
+        <table id="stock-list-table" class="table table-striped table-bordered table-hover dataTable no-footer dtr-inline full-width">
+          <thead>
+            <tr>
+              <th>銘柄コード</th>
+              <th>日付</th>
+              <th>開始値</th>
+              <th>高値</th>
+              <th>安値</th>
+              <th>終値</th>
+              <th>出来高</th>
+              <th>調整値</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sd in stock %}
+            <tr>
+              <td>{{sd.code}}</td>
+              <td>{{sd.date}}</td>
+              <td>{{sd.opening}}</td>
+              <td>{{sd.high}}</td>
+              <td>{{sd.low}}</td>
+              <td>{{sd.closing}}</td>
+              <td>{{sd.volume}}</td>
+              <td>{{sd.adjustment}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!--End of Chart and Table Area-->
     </div>
   </div>
-  <script>
-    // ///////////////////////
-    // StockChart
-    // ///////////////////////   
+</div>
+<script>
+  // ///////////////////////
+  // StockChart
+  // ///////////////////////   
 
-    // Glocal Options
-    // Chart.defaults.global.defaultFontFamily = 'Lato';
-    // Chart.defaults.global.defaultFontSize = 18;
-    // Chart.defaults.global.defaultFontColor = 18;
+  // Glocal Options
+  // Chart.defaults.global.defaultFontFamily = 'Lato';
+  // Chart.defaults.global.defaultFontSize = 18;
+  // Chart.defaults.global.defaultFontColor = 18;
 
 
-    var label = [];
-    var data = [];
-    {% for stock_data in stock %}
-    label.push("{{stock_data.date}}");
-    data.push("{{stock_data.closing}}")
-    {% endfor %}
+  var label = [];
+  var data = [];
+  {% for stock_data in stock %}
+  label.push("{{stock_data.date}}");
+  data.push("{{stock_data.closing}}")
+  {% endfor %}
 
-    let StockChart = document.getElementById('StockChart').getContext('2d');
-    let StockChartDef = new Chart(StockChart, {
-      type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
-      data: {
-        labels: label,
-        datasets: [{
-          label: '株価(円)',
-          data: data,
-          backgroundColor: [
-            // 'rgba(255, 99, 132, 0.6)',
-            'rgba(255, 206, 86, 0.6)',
-          ],
-          // borderWidth: 4,
-          // borderColor: '#333',
-          // hoverBorderWidth: 1,
-          // hoverBorderColor: '#777',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }]
-      },
-      options: {
-        title: {
-          display: true,
-          text: "{{jp_name}}({{query_code}})"
-        }
+  let StockChart = document.getElementById('StockChart').getContext('2d');
+  let StockChartDef = new Chart(StockChart, {
+    type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
+    data: {
+      labels: label,
+      datasets: [{
+        label: '株価(円)',
+        data: data,
+        backgroundColor: [
+          // 'rgba(255, 99, 132, 0.6)',
+          'rgba(50, 204, 18, 0.6)',
+        ],
+        // borderWidth: 4,
+        // borderColor: '#333',
+        // hoverBorderWidth: 1,
+        // hoverBorderColor: '#777',
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: "{{jp_name}}({{query_code}})"
       }
+    }
 
-    });
-    // ----- Stock chart end here -----
+  });
+  // ----- Stock chart end here -----
 
-    // ///////////////////////
-    // SentimentChart
-    // ///////////////////////
-    var label = [];
-    var positive = [];
-    var neutral = [];
-    var negative = [];
-    {% for sentiment_data in sentiment %}
-    label.push("{{sentiment_data.date}}");
-    positive.push("{{sentiment_data.positive}}")
-    neutral.push("{{sentiment_data.neutral}}")
-    negative.push("{{sentiment_data.negative}}")
-    {% endfor %}
+  // ///////////////////////
+  // SentimentChart
+  // ///////////////////////
+  var label = [];
+  var positive = [];
+  var neutral = [];
+  var negative = [];
+  {% for sentiment_data in sentiment %}
+  label.push("{{sentiment_data.date}}");
+  positive.push("{{sentiment_data.positive}}")
+  neutral.push("{{sentiment_data.neutral}}")
+  negative.push("{{sentiment_data.negative}}")
+  {% endfor %}
 
-    let SentimentChart = document.getElementById('SentimentChart').getContext('2d');
-    let SentimentChartDef = new Chart(SentimentChart, {
-      type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
-      data: {
-        labels: label,
-        datasets: [{
-          label: 'positive',
-          data: positive,
-          backgroundColor: [
-            'rgba(215, 196, 71, 0.6)',
-          ],
-          // borderWidth: 4,
-          // borderColor: '#333',
-          // hoverBorderWidth: 1,
-          // hoverBorderColor: '#777',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'neutral',
-          data: neutral,
-          backgroundColor: [
-            // 'rgba(255, 99, 132, 0.6)',
-            'rgba(232, 82, 152, 0.6)',
-          ],
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'negative',
-          data: negative,
-          backgroundColor: [
-            'rgba(0, 173, 169, 0.6)',
-          ],
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155'
-        }]
-      },
-      options: {
-        title: {
-          display: true,
-          text: "{{jp_name}}({{query_code}})"
-        }
+  let SentimentChart = document.getElementById('SentimentChart').getContext('2d');
+  let SentimentChartDef = new Chart(SentimentChart, {
+    type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
+    data: {
+      labels: label,
+      datasets: [{
+        label: 'positive',
+        data: positive,
+        backgroundColor: [
+          'rgba(215, 196, 71, 0.6)',
+        ],
+        // borderWidth: 4,
+        // borderColor: '#333',
+        // hoverBorderWidth: 1,
+        // hoverBorderColor: '#777',
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'neutral',
+        data: neutral,
+        backgroundColor: [
+          // 'rgba(255, 99, 132, 0.6)',
+          'rgba(232, 82, 152, 0.6)',
+        ],
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'negative',
+        data: negative,
+        backgroundColor: [
+          'rgba(0, 173, 169, 0.6)',
+        ],
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155'
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: "{{jp_name}}({{query_code}})"
       }
+    }
 
-    });
+  });
 
-    // ///////////////////////
-    // ChangeRateChart
-    // ///////////////////////
+  // ///////////////////////
+  // ChangeRateChart
+  // ///////////////////////
 
-    // var label = [];
-    var cr_opening = [];
-    var cr_closing = [];
-    var cr_positive = [];
-    var cr_neutral = [];
-    var cr_negative = [];
+  // var label = [];
+  var cr_opening = [];
+  var cr_closing = [];
+  var cr_positive = [];
+  var cr_neutral = [];
+  var cr_negative = [];
 
-    {% for cr_o in cr_opening %}
-    cr_opening.push("{{cr_o}}")
-    console.log("opening: {{cr}}")
-    {% endfor %}
+  {% for cr_o in cr_opening %}
+  cr_opening.push("{{cr_o}}")
+  console.log("opening: {{cr}}")
+  {% endfor %}
 
-    {% for cr_c in cr_closing %}
-    cr_closing.push("{{cr_c}}")
-    console.log("closing: {{cr_c}}")
-    {% endfor %}
+  {% for cr_c in cr_closing %}
+  cr_closing.push("{{cr_c}}")
+  console.log("closing: {{cr_c}}")
+  {% endfor %}
 
-    {% for cr_ps in cr_positive %}
-    cr_positive.push("{{cr_ps}}")
-    console.log("opening: {{cr_ps}}")
-    {% endfor %}
+  {% for cr_ps in cr_positive %}
+  cr_positive.push("{{cr_ps}}")
+  console.log("opening: {{cr_ps}}")
+  {% endfor %}
 
-    {% for cr_nu in cr_neutral %}
-    cr_neutral.push("{{cr_nu}}")
-    console.log("opening: {{cr_nu}}")
-    {% endfor %}
+  {% for cr_nu in cr_neutral %}
+  cr_neutral.push("{{cr_nu}}")
+  console.log("opening: {{cr_nu}}")
+  {% endfor %}
 
-    {% for cr_ng in cr_negative %}
-    cr_negative.push("{{cr_ng}}")
-    console.log("opening: {{cr_ng}}")
-    {% endfor %}
+  {% for cr_ng in cr_negative %}
+  cr_negative.push("{{cr_ng}}")
+  console.log("opening: {{cr_ng}}")
+  {% endfor %}
 
-    let ChangeRateChart = document.getElementById('ChangeRateChart').getContext('2d');
-    let ChangeRateChartDef = new Chart(ChangeRateChart, {
-      type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
-      data: {
-        labels: label,
-        datasets: [{
-          label: 'opening',
-          data: cr_opening,
-          backgroundColor: [
-            'rgba(215, 196, 71, 0.6)',
-          ],
-          // borderWidth: 4,
-          // borderColor: '#333',
-          // hoverBorderWidth: 1,
-          // hoverBorderColor: '#777',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'closing',
-          data: cr_closing,
-          backgroundColor: [
-            'rgba(215, 196, 71, 0.6)',
-          ],
-          // borderWidth: 4,
-          // borderColor: '#333',
-          // hoverBorderWidth: 1,
-          // hoverBorderColor: '#777',
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'positive',
-          data: cr_positive,
-          backgroundColor: [
-            'rgba(215, 196, 71, 0.6)',
-          ],
+  let ChangeRateChart = document.getElementById('ChangeRateChart').getContext('2d');
+  let ChangeRateChartDef = new Chart(ChangeRateChart, {
+    type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
+    data: {
+      labels: label,
+      datasets: [{
+        label: 'opening',
+        data: cr_opening,
+        backgroundColor: [
+          'rgba(50, 204, 18, 0.6)',
+        ],
+        // borderWidth: 4,
+        // borderColor: '#333',
+        // hoverBorderWidth: 1,
+        // hoverBorderColor: '#777',
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'closing',
+        data: cr_closing,
+        backgroundColor: [
+          'rgba(86, 99, 143, 0.6)',
+        ],
+        // borderWidth: 4,
+        // borderColor: '#333',
+        // hoverBorderWidth: 1,
+        // hoverBorderColor: '#777',
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'positive',
+        data: cr_positive,
+        backgroundColor: [
+          'rgba(215, 196, 71, 0.6)',
+        ],
 
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'neutral',
-          data: cr_neutral,
-          backgroundColor: [
-            'rgba(232, 82, 152, 0.6)',
-          ],
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155',
-        }, {
-          label: 'negative',
-          data: cr_negative,
-          backgroundColor: [
-            'rgba(0, 173, 169, 0.6)',
-          ],
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ffd155'
-        }]
-      },
-      options: {
-        title: {
-          display: true,
-          text: "{{jp_name}}({{query_code}})"
-        }
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'neutral',
+        data: cr_neutral,
+        backgroundColor: [
+          'rgba(232, 82, 152, 0.6)',
+        ],
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155',
+      }, {
+        label: 'negative',
+        data: cr_negative,
+        backgroundColor: [
+          'rgba(0, 173, 169, 0.6)',
+        ],
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#ffd155'
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: "{{jp_name}}({{query_code}})"
       }
+    }
 
+  });
+
+
+  $(document).ready(function () {
+    $('#stock-list-table').DataTable({
+      responsive: true,
+      // sort機能の有効化
+      ordering: true,
+      // ページの表示件数を変更する
+      displayLength: 10,
     });
-
-
-    $(document).ready(function () {
-      $('#stock-list-table').DataTable({
-        responsive: true,
-        // sort機能の有効化
-        ordering: true,
-        // ページの表示件数を変更する
-        displayLength: 10,
-      });
-    });
-  </script>
-  {% endblock %}/html>
+  });
+</script>
+{% endblock %}

@@ -80,7 +80,7 @@ class MakeSentimentData:
                     self.NumberOfNeutral += result['matching_results']
                 if result['key'] == 'negative':
                     self.NumberOfNegative += result['matching_results']
-        
+
         self.bReturn = True
         return self.bReturn, self.NumberOfPositive, self.NumberOfNeutral, self.NumberOfNegative
 
@@ -179,7 +179,7 @@ class MakeSentimentDataLoopAndOutCSV(MakeSentimentData):
             # Windowsのファイルパス対策
             file_path = repr(sentiment_csv_file).replace('\\\\', '/')
             Stats = S3Stats.S3StatsCSV(SentiPath=file_name)
-            sentiment_data = Stats.getSentiData()
+            sentiment_data = Stats.get_senti_data()
 
             # ///////////////////////////
             # //　センチメントデータの更新

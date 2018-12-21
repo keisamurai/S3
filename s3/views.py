@@ -56,8 +56,8 @@ class DataListView(TemplateView):
         # S3Stats準備
         stats = S3Stats.S3Stats()
         # 株価とセンチメントデータの変化率データ取得
-        merged_data = stats.mergeSS(df_stock, df_sentiment)
-        change_rate = stats.ChangeRateData(merged_data)
+        merged_data = stats.merge_ss(df_stock, df_sentiment)
+        change_rate = stats.change_rate_data(merged_data)
         corr = change_rate.corr()
 
         # 日本語名を取得
@@ -75,6 +75,9 @@ class DataListView(TemplateView):
             # ※DataFrameを単純にforに使うと列名(str)を取得する
             cn = 'cr_' + col_name
             context[cn] = change_rate[col_name]
+        for corr_col_name in corr:
+            cn = 'corr_' + corr_col_name
+            context[cn] = corr.loc[corr_col_name].round(3)
 
         return render(self.request, self.template_name, context)
 

@@ -52,13 +52,12 @@ def DateConv(day, mode=0):
                :  1 -> 日付をYYYY-MM-DDで返す
                :  2 -> 日付をYYYY/MM/DDで返す
     """
-    Date = str(day.year) + str(day.month) + str(day.day)
     if mode == 0:
-        return Date[0:4] + Date[4:6] + Date[6:8] 
+        return day.strftime('%Y%m%d')
     if mode == 1:
-        return Date[0:4] + '-' + Date[4:6] + '-' + Date[6:8]
+        return day.strftime('%Y-%m-%d')
     if mode == 2:
-        return Date[0:4] + '/' + Date[4:6] + '/' + Date[6:8]
+        return day.strftime('%Y/%m/%d')
     else:
         return False
 
@@ -175,7 +174,7 @@ def DateUTime(Date):
         return False
     # パターン１
     if len(Date) == NUM_DAY_LEN and DateCheck(Date):
-        return Date[0:4] + '-' + Date[4:6] + '-' + Date[6:8] 
+        return Date[0:4] + '-' + Date[4:6] + '-' + Date[6:8]
     # パターン２
     if len(Date) == NUM_DAY_LEN_UNIX and DateCheck(Date):
         return datetime.datetime.strptime(Date, '%Y-%m-%d')

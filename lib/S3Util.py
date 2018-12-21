@@ -47,7 +47,6 @@ def add_dot_dir_path(dir_path):
 
     Args:
         dir_path (string): チェックするディレクトリのパス
-    
     Returns:
         bool: False
         string: checked dir_path

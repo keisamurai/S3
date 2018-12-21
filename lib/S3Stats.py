@@ -35,43 +35,43 @@ class S3Stats:
         """Deconstructor"""
         pass
 
-    def setStockPath(self, StockPath):
+    def set_stock_path(self, StockPath):
         """
         description: 株価データのパスをセットする
         """
         self.StockPath = StockPath
 
-    def getStockPath(self):
+    def get_stock_path(self):
         """
         description: 株価データのパスを返す
         """
         return self.StockPath
 
-    def setSentiPath(self, SentiPath):
+    def set_senti_path(self, SentiPath):
         """
         description: センチメントデータのパスをセットする
         """
         self.SentiPath = SentiPath
 
-    def getSentiPath(self):
+    def get_senti_path(self):
         """
         description: センチメントデータのパスを返す
         """
-        return self.setSentiPath
+        return self.set_senti_path
 
-    def checkPath(self):
+    def check_path(self):
         """
         description: センチメントデータと株価データの存在確認（オーバーライド前提）
         """
         pass
 
-    def getStockAndSenti(self, TargetCode):
+    def get_stock_and_senti(self, TargetCode):
         """
         description: センチメントデータと株価データ取得（オーバーライド前提）
         """
         pass
 
-    def mergeSS(self, stock_data, senti_data):
+    def merge_ss(self, stock_data, senti_data):
         """
         description : 株価とセンチメントデータを統合する
         args        : senti_data -> センチメントデータ
@@ -87,7 +87,7 @@ class S3Stats:
         merged_data = pd.merge(stock_data, senti_data, on='date')
         return merged_data
 
-    def ChangeRateData(self, merged_data):
+    def change_rate_data(self, merged_data):
         """
         description : 統合されたデータを変化率のデータに変換する
                     :   opening -> 開始値
@@ -108,7 +108,7 @@ class S3Stats:
 
         return changerate_data
 
-    def shiftData(self, data, shift_list, shift=-1):
+    def shift_data(self, data, shift_list, shift=-1):
         """
         description : dataを与えられた数値分ずらす
                     :  ※株価データを一日前倒しするために利用する想定
@@ -123,7 +123,7 @@ class S3Stats:
 
         return shiftedData
 
-    def findStockNADate(self, stock_data):
+    def find_stock_na_date(self, stock_data):
         """
         description: 株価データ(dataframe)の欠損日付(N/ADate)を取得する
         output: 欠損日付(list)
@@ -153,22 +153,25 @@ class S3Stats:
 
             # 機械的に生成した全日日付(day_list)と、営業日データ(stock_data['date'])から、
             # 一致しない日付がNAと判断する
-            for i in range(len(day_list)):
-                for j in range(len(stock_data['date'])):
-                    if day_list[i] == stock_data['date'][j]:
-                        i += 1
-                        j += 1
-                    else:  # day_list[i]がstock_data['data'][j]に存在しない場合、na_listに追加し、iだけ進める
-                        na_list.append(day_list[i])
-                        i += 1
+            i = 0
+            j = 0
+            for all_day in range(len(day_list)):
+                if day_list[i] == stock_data['date'][j]:
+                    i += 1
+                    j += 1
+                else:  # day_list[i]がstock_data['data'][j]に存在しない場合、na_listに追加し、iだけ進める
+                    na_list.append(day_list[i])
+                    i += 1
 
             return na_list
 
-    def CompStockNA(self, stock_data, na_list):
+    def comp_stock_na(self, stock_data, na_list, round_digit=""):
         """
         description:株価データの欠損値を線形補完する
         input      :stock_data -> 株価データ(df)
                    :na_list    -> 欠損している日付のlist
+                   :round_digit -> 欠損値を四捨五入する際の桁
+                   :           (ex.12.44はround_digit=1のとき、12.4として四捨五入される)
         output     :(success) stock_data -> 欠損値を補完した株価データ
                    :(fail) False
                    :(fail) emsg
@@ -187,9 +190,10 @@ class S3Stats:
                 )
             if fflg == 0:
                 work_df = work_df_tmp
+                fflg = 1
             else:
                 # 2回目以降のループではwork_dfに追加
-                work_df.append(work_df_tmp)
+                work_df = work_df.append(work_df_tmp)
 
         # ------------------------------
         # na_listを追加したstock_dataを初期化
@@ -208,49 +212,68 @@ class S3Stats:
         na_work_idx = 0
         target_label = ['opening', 'high', 'low', 'closing', 'volume', 'adjustment']
         for na_day in na_list:
-            if na_work_idx == 0:
+            # na_work_listの最初の要素について、na_dayをna_work_listに追加して、イテレータを進める
+            if (na_work_idx == 0):
                 na_work_idx += 1
-                na_work_list = na_work_list.append(na_day)
+                na_work_list.append(na_day)
+                continue
+
+            # na_listの最後の要素について、補完処理よりも先にna_dayをna_work_listに追加する
+            if na_day == na_list[len(na_list) - 1]:
+                na_work_list.append(na_day)
 
             # na_work_listの最新の値と、na_dayの一日前が一致しない場合、補完処理にna_worK_listを渡す
-            elif na_work_list[len(na_work_list) - 1] != dc.DateConv(dc.DateAdd(dc.DateConv(na_day), -1), mode=1):
+            if na_work_list[len(na_work_list) - 1] != dc.DateConv(dc.DateAdd(dc.CharConv(na_day, mode=1), -1), mode=1):
                 # -----------------------------
                 # 補完処理
                 # -----------------------------
                 # na_work_list[0]の前日
-                pre_na_day = dc.DateAdd(dc.DateConv(na_work_list[0]), -1)
+                pre_na_day = dc.DateAdd(dc.CharConv(na_work_list[0], mode=1), -1)
                 # na_work_list[len(na_work_list) - 1] の翌日
-                next_na_day = dc.DateAdd(dc.DateConv(na_work_list[len(na_work_list) - 1]), 1)
+                next_na_day = dc.DateAdd(dc.CharConv(na_work_list[len(na_work_list) - 1], mode=1), 1)
                 # 線形補完の始点の日付(YYYY-MM-DD)
                 day_x0 = dc.DateConv(pre_na_day, mode=1)
                 # 線形補完の終点の日付(YYYY-MM-DD)
                 day_x1 = dc.DateConv(next_na_day, mode=1)
 
-                # 線形補完の始点の日付のインデックス番号
-                x0 = stock_data[stock_data['date'] == day_x0].index.values
-                # 線形補完の終点の日付のインデックス番号
-                x1 = stock_data[stock_data['date'] == day_x1].index.values
                 # na_work_list でループ
                 for day_x in na_work_list:
                     for label in target_label:
+                        # 線形補完の始点の日付のインデックス
+                        x0 = stock_data[stock_data['date'] == day_x0].index.values
+                        # 線形補完の終点の日付のインデックス
+                        x1 = stock_data[stock_data['date'] == day_x1].index.values
                         y0 = stock_data[stock_data['date'] == day_x0][label]
                         y1 = stock_data[stock_data['date'] == day_x1][label]
                         x = stock_data[stock_data['date'] == day_x].index.values
-                        y = self.CalcLerp(x0, x1, y0, y1, x)
+
+                        # 線形補完に必要な数値にアクセス
+                        x0 = x0[0]
+                        x1 = x1[0]
+                        y0 = y0[y0.index.values[0]]
+                        y1 = y1[y1.index.values[0]]
+                        x = x[0]
+                        y = self.calc_lerp(x0, x1, y0, y1, x)
+                        
+                        # 四捨五入する場合は、インプットに応じて丸め処理
+                        if not round_digit == "":
+                            y = round(y, round_digit)
+
                         # 値を代入
                         stock_data.loc[stock_data['date'] == day_x, label] = y
                 # -----------------------------
-                # na_work_list初期化
+                # 初期化
                 # -----------------------------
                 na_work_list = []
+                na_work_list.append(na_day)
 
             # na_work_listの最新の値と、na_dayの一日前が一致する場合
             else:
-                na_work_list = na_work_list.append(na_day)
+                na_work_list.append(na_day)
 
         return stock_data
 
-    def CalcLerp(self, x0, x1, y0, y1, x):
+    def calc_lerp(self, x0, x1, y0, y1, x):
         """
         description : 線形補完(Linear interpolation)を計算する
         args        : x0 -> 始点のx軸値
@@ -270,7 +293,7 @@ class S3Stats:
 
         return y
 
-    def StockMAI(self, stock_data):
+    def stock_MAI(self, stock_data):
         """
         description: 株価データから移動平均(Moving Average)を求める
         # 後で実装
@@ -284,7 +307,7 @@ class S3StatsCSV(S3Stats):
         """Constructor"""
         super().__init__(StockPath, SentiPath)
 
-    def checkPath(self, mode):
+    def check_path(self, mode):
         """
         description : センチメントデータ(CSV)と株価データ(CSV)の存在確認
         input       : mode -> 実行モード
@@ -303,13 +326,14 @@ class S3StatsCSV(S3Stats):
 
         return self.SUCCESS_STATUS
 
-    def getStockData(self, path="", code="", start="", end=""):
+    def get_stock_data(self, path="", code="", start="", end="", header_num=1):
         """
         description : 銘柄コードから株価データのデータフレームを取得する
         args        : code -> データを取得する対象コード
                     : path -> csv保管ディレクトリ
                     : start -> データを取得する期間の開始日
                     : end -> データを取得する期間の終了日
+                    : header_num -> 読み取るヘッダーの開始点(デフォルト 1)
         return      : stock_data -> 取得したデータ(DataFrame)
         @後でcodeを使ってデータを取得するように修正する
         """
@@ -318,16 +342,15 @@ class S3StatsCSV(S3Stats):
             os.chdir(path)
 
         # 株価データの存在確認
-        if type(self.checkPath(0)) != bool:
-            self.emsg = self.checkPath(0)[self.POS_MSG]
+        if type(self.check_path(0)) != bool:
+            self.emsg = self.check_path(0)[self.POS_MSG]
             return self.ERROR_STATUS, self.emsg
 
         try:
             # 株価データの取得
-            # webからダウンロードした時点でms932でエンコードされていることに注意
             stock_data = pd.read_csv(
                 self.StockPath,
-                header=1,
+                header=header_num,
                 encoding='ms932',
                 names=['date',
                        'opening',
@@ -371,7 +394,7 @@ class S3StatsCSV(S3Stats):
         stock_data = stock_from_start_by_end.reset_index(drop=True)
         return stock_data
 
-    def getSentiData(self, path="", code="", start="", end=""):
+    def get_senti_data(self, path="", code="", start="", end=""):
         """
         description : 銘柄コードからセンチメントデータのデータフレームを取得する
         args        : code -> データを取得する対象コード
@@ -385,8 +408,8 @@ class S3StatsCSV(S3Stats):
             os.chdir(path)
 
         # センチメントデータ、株価データの存在確認
-        if type(self.checkPath(mode=1)) != bool:
-            self.emsg = self.checkPath(mode=1)[self.POS_MSG]
+        if type(self.check_path(mode=1)) != bool:
+            self.emsg = self.check_path(mode=1)[self.POS_MSG]
             return self.ERROR_STATUS, self.emsg
 
         try:
@@ -434,7 +457,7 @@ class S3StatsCSV(S3Stats):
         senti_data = senti_from_start_by_end.reset_index(drop=True)
         return senti_data
 
-    def getStockAndSenti(self, code, start="", end=""):
+    def get_stock_and_senti(self, code, start="", end=""):
         """
         description: 銘柄コードからセンチメントデータと株価データからデータフレームを取得する
         arg:
@@ -442,11 +465,34 @@ class S3StatsCSV(S3Stats):
             end:取得終了日(YYYYMMDD 文字列)
         """
         # 株価データの取得
-        stock_data = self.getStockData(code, start="", end="")
+        stock_data = self.get_stock_data(code, start="", end="")
         # センチメントデータの取得
-        senti_data = self.getSentiData(code, start="", end="")
+        senti_data = self.get_senti_data(code, start="", end="")
 
         return senti_data, stock_data
+
+    def comp_stock_na_csv_file(self, csv_file_path):
+        """株価データのcsvファイル内のデータを線形補完する
+
+        Args:
+            csv_file_path (str): 対象株価データcsvファイル
+        Return:
+            False or 株価データ(DataFrame)
+        """
+        rtn = False
+
+        if not os.path.exists(csv_file_path):
+            return rtn
+
+        self.StockPath = csv_file_path
+        # csvファイルから株価情報をDataFrameで取得
+        stock_data = self.get_stock_data()
+        # 株価データの欠損日日付リストを取得
+        na_list = self.find_stock_na_date(stock_data)
+        # 株価データを線形補完する
+        stock_data = self.comp_stock_na(stock_data, na_list, round_digit=1)
+
+        return stock_data
 
 # //////////////
 # //   TEST   //
