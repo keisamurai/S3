@@ -18,117 +18,57 @@
               株価
             </div>
             <div class="panel panel-body">
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                <li class="active">
-                  <a href="#full-stock" data-toggle="tab" aria-expanded="true">full</a>
-                </li>
-                <li class>
-                  <a href="#monthly-stock" data-toggle="tab" aria-expanded="true">monthly</a>
-                </li>
-                <li class>
-                  <a href="#weekly-stock" data-toggle="tab" aria-expanded="true">weekly</a>
-                </li>
-              </ul>
-              <!-- Tab panes -->
-              <div class="tab-content">
-                <div class="tab-pane fade active in" id="full-stock">
-                  <!-- full stock Chart -->
-                  <div class="col-lg-7">
-                    <canvas id="full-StockChart"></canvas>
-                  </div>
-                  <div class="col-lg-5">
-                    <!-- stock-describe -->
-                    <div class="table-responsive">
-                      <table class="table table-striped">
-                        <thead>
-                          <tr>
-                            <th> </th>
-                            {% for col_name in stock_describe_columns %}
-                            <th>{{col_name}}</th>
-                            {% endfor %}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for index, sd_row in stock_describe.iterrows %}
-                          <tr>
-                            <td>{{sd_row.name}}</td>
-                            {% for value_sd_row in sd_row %}
-                            <td>{{value_sd_row}}</td>
-                            {% endfor %}
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div class="tab-pane fade" id="monthly-stock">
-                  <!-- monthly stock Chart -->
-                  <div class="col-lg-7">
-                    <canvas id="monthly-StockChart"></canvas>
-                  </div>
-                  <div class="col-lg-5">
-                    <!-- stock-describe -->
-                    <div class="table-responsive">
-                      <table class="table table-striped">
-                        <thead>
-                          <tr>
-                            <th> </th>
-                            {% for col_name in stock_monthly_describe %}
-                            <th>{{col_name}}</th>
-                            {% endfor %}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for index, smd_row in stock_monthly_describe.iterrows %}
-                          <tr>
-                            <td>{{smd_row.name}}</td>
-                            {% for value_smd_row in smd_row %}
-                            <td>{{value_smd_row}}</td>
-                            {% endfor %}
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                </div>
-                <div class="tab-pane fade" id="weekly-stock">
-                  <!-- weekly Chart -->
-                  <div class="col-lg-7">
-                    <canvas id="weekly-StockChart"></canvas>
-                  </div>
-                  <div class="col-lg-5">
-                    <!-- stock-describe -->
-                    <div class="table-responsive">
-                      <table class="table table-striped">
-                        <thead>
-                          <tr>
-                            <th> </th>
-                            {% for col_name in stock_weekly_describe %}
-                            <th>{{col_name}}</th>
-                            {% endfor %}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for index, swd_row in stock_weekly_describe.iterrows %}
-                          <tr>
-                            <td>{{swd_row.name}}</td>
-                            {% for value_swd_row in swd_row %}
-                            <td>{{value_swd_row}}</td>
-                            {% endfor %}
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+              <div class="col-lg-7">
+                <canvas id="StockChart"></canvas>
+              </div>
+              <div class="col-lg-5">
+                <!-- stock-describe -->
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th> </th>
+                        {% for col_name in stock_describe_columns %}
+                        <th>{{col_name}}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>count</td>
+                        {% for co in st_desc_count %}
+                        <td>{{co}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>mean</td>
+                        {% for mn in st_desc_mean %}
+                        <td>{{mn}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>std</td>
+                        {% for st in st_desc_std %}
+                        <td>{{st}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>min</td>
+                        {% for mi in st_desc_min %}
+                        <td>{{mi}}</td>
+                        {% endfor %}
+                      </tr>
+                      <tr>
+                        <td>max</td>
+                        {% for ma in st_desc_max %}
+                        <td>{{ma}}</td>
+                        {% endfor %}
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -444,24 +384,22 @@
           </table>
         </div>
       </div>
-    </div>
 
+      <!--End of Chart and Table Area-->
+    </div>
   </div>
-  <!--End of Chart and Table Area-->
 </div>
 <script>
-  // //////////////////////////////////////////////
+  // ///////////////////////
   // StockChart
-  // //////////////////////////////////////////////
+  // ///////////////////////   
 
   // Glocal Options
   // Chart.defaults.global.defaultFontFamily = 'Lato';
   // Chart.defaults.global.defaultFontSize = 18;
   // Chart.defaults.global.defaultFontColor = 18;
 
-  // -------------------------------- 
-  // FullStockChart
-  // -------------------------------- 
+
   var label = [];
   var data = [];
   {% for stock_data in stock %}
@@ -469,8 +407,8 @@
   data.push("{{stock_data.closing}}")
   {% endfor %}
 
-  let FullStockChart = document.getElementById('full-StockChart').getContext('2d');
-  let FullStockChartDef = new Chart(FullStockChart, {
+  let StockChart = document.getElementById('StockChart').getContext('2d');
+  let StockChartDef = new Chart(StockChart, {
     type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
     data: {
       labels: label,
@@ -497,86 +435,6 @@
     }
 
   });
-
-
-  // -------------------------------- 
-  // MonthlyStockChart
-  // --------------------------------
-  var monthly_label = [];
-  var monthly_data = [];
-  {% for index, monthly_stock_data in monthly_stock.iterrows %}
-  monthly_label.push("{{monthly_stock_data.date}}");
-  monthly_data.push("{{monthly_stock_data.closing}}")
-  {% endfor %}
-
-  let MonthlyStockChart = document.getElementById('monthly-StockChart').getContext('2d');
-  let MonthlyStockChartDef = new Chart(MonthlyStockChart, {
-    type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
-    data: {
-      labels: monthly_label,
-      datasets: [{
-        label: '株価(円)',
-        data: monthly_data,
-        backgroundColor: [
-          // 'rgba(255, 99, 132, 0.6)',
-          'rgba(50, 204, 18, 0.6)',
-        ],
-        // borderWidth: 4,
-        // borderColor: '#333',
-        // hoverBorderWidth: 1,
-        // hoverBorderColor: '#777',
-        pointHoverRadius: 6,
-        pointHoverBackgroundColor: '#ffd155',
-      }]
-    },
-    options: {
-      title: {
-        display: true,
-        // text: "{{jp_name}}({{query_code}})"
-      }
-    }
-
-  });
-
-  // -------------------------------- 
-  // WeeklyStockChart
-  // --------------------------------
-  var weekly_label = [];
-  var weekly_data = [];
-  {% for i, weekly_stock_data in weekly_stock.iterrows %}
-  weekly_label.push("{{weekly_stock_data.date}}");
-  weekly_data.push("{{weekly_stock_data.closing}}")
-  {% endfor %}
-
-  let WeeklyStockChart = document.getElementById('weekly-StockChart').getContext('2d');
-  let WeeklyStockChartDef = new Chart(WeeklyStockChart, {
-    type: 'line',// bar, harizontalbar , pie, line doughnut, radar, plararea
-    data: {
-      labels: weekly_label,
-      datasets: [{
-        label: '株価(円)',
-        data: weekly_data,
-        backgroundColor: [
-          // 'rgba(255, 99, 132, 0.6)',
-          'rgba(50, 204, 18, 0.6)',
-        ],
-        // borderWidth: 4,
-        // borderColor: '#333',
-        // hoverBorderWidth: 1,
-        // hoverBorderColor: '#777',
-        pointHoverRadius: 6,
-        pointHoverBackgroundColor: '#ffd155',
-      }]
-    },
-    options: {
-      title: {
-        display: true,
-        // text: "{{jp_name}}({{query_code}})"
-      }
-    }
-
-  });
-
   // ----- Stock chart end here -----
 
   // ///////////////////////

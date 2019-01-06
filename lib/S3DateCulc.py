@@ -3,6 +3,7 @@
 # // description: 日付計算用
 # ////////////////////////////////////////
 import datetime
+from dateutil.relativedelta import relativedelta
 
 NUM_DAY = 3             # 受け取る引数の数
 NUM_DAY_LEN = 8         # 引数の文字列
@@ -42,6 +43,36 @@ def DateCheck(Date):
             return False
 
     return False
+
+
+def today():
+    """当日日付を文字列で返す(YYYY-MM-DD)"""
+    today = datetime.datetime.today()
+    rtn = datetime.datetime.strftime(today, "%Y-%m-%d")
+
+    return rtn
+
+
+def month_delta(start_day, month="", week=""):
+    """開始日からnヶ月後(前) or n週間後(前)の日を計算して返す
+
+    Args:
+        start_day (datetime): 開始日
+        month (int): nヶ月後(前)
+    """
+    if type(start_day) == str:
+        start_day = datetime.datetime.strptime(start_day, "%Y-%m-%d")
+
+    if month and week:
+        return False
+
+    if month:
+        target_day = start_day + relativedelta(months=month)
+
+    if week:
+        target_day = start_day + relativedelta(weeks=week)
+
+    return target_day
 
 
 def DateConv(day, mode=0):

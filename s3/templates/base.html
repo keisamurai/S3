@@ -41,10 +41,16 @@
     <div id="wrapper">
       <nav class="navbar navbar-default navbar-static-top manager-nav no-margin" role="navigation">
         <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle nabigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
           <a class="navbar-brand">S3 project</a>
         </div>
         <div class="navbar-default sidebar" role="navigation">
-          <div class="sidebar-nav navbar-collapse">
+          <div class="sidebar-nav navbar-collapse collapse in" aria-expanded="false" style="height: 1px;">
             <ul class="nav" id="side-menu">
               <li><a href="/dashboard/"><i class="fa fa-dashboard fa-fw" aria-hidden="true"></i>  ダッシュボード　</a></li>
               <li><a href="/code_master/"><i class="fa fa-bar-chart" aria-hidden="true"></i>  銘柄一覧　</a></li>

@@ -87,7 +87,125 @@ class S3Stats:
         merged_data = pd.merge(stock_data, senti_data, on='date')
         return merged_data
 
-    def change_rate_data(self, merged_data):
+    def df_filter(
+        self,
+        df_data,
+        dict_limit_filter="",
+        start_day="",
+        end_day="",
+    ):
+        """受領したDataFrameから対象ラベルを上下限や開始日/終了日によってフィルタする
+            df_data: DataFrame data
+            dict_limit_filter (str, optional): Defaults to "" 上下限の指定を定義するdict
+            start_day (str, optional): Defaults to "" 開始日  ex. '2018-08-11'
+            end_day (str, optional): Defaults to "" 終了日    ex. '2018-09-11'
+            return : filtered_df
+        """
+        UPPER_LIMIT = 0
+        LOWER_LIMIT = 1
+        # --------------------
+        # チェック処理
+        # --------------------
+        rtn = False
+
+        # dict_limit_filter中に、df_dataにないラベルが含まれる場合エラー
+        if dict_limit_filter:
+            hit_flg = 0
+            for dict_key in dict_limit_filter:
+                for df_col in df_data:
+                    if dict_key == df_col:
+                        hit_flg = 1
+                        break
+                    if hit_flg == 0:
+                        return rtn
+                    else:
+                        hit_flg = 0
+
+        if start_day and end_day:
+            if start_day >= end_day:
+                return rtn
+
+        # ===========================
+        # フィルタ処理
+        # ===========================
+        # ----------------------
+        # 列フィルタ
+        # ----------------------
+        target_list = []
+        if dict_limit_filter:
+            for key in dict_limit_filter:
+                target_list.append(key)
+            df_col_filtered = df_data.loc[:, target_list]
+
+        # ----------------------
+        # 日付フィルタ
+        # ----------------------
+        # 日付フィルタしかない場合、日付でフィルタして返す
+        if not dict_limit_filter:
+            if start_day:
+                filtered_df = df_data[df_data['date'] > start_day]
+            if end_day:
+                filtered_df = filtered_df[filtered_df['date'] <= end_day]
+            return filtered_df
+
+        # dict_limit_filterが設定されている場合
+        date_df = df_data.loc[:, ['date']]
+        if start_day:
+            date_df = date_df[date_df['date'] >= start_day]
+        if end_day:
+            date_df = date_df[date_df['date'] <= end_day]
+
+        # ----------------
+        # 上下限 フィルター
+        # ----------------
+        filtered_df = df_col_filtered
+        query = ""
+        b_flg = 0  # 状態変化確認用フラグbefore
+        a_flg = 0  # 状態変化確認用フラグafter
+        last = len(dict_limit_filter.keys()) - 1
+        itr = 0
+        for key in dict_limit_filter:
+            # keyに関連するdata frameを取得する
+            df_key = df_col_filtered.loc[:, [key]]
+            upper_limit = dict_limit_filter[key][UPPER_LIMIT]
+            lower_limit = dict_limit_filter[key][LOWER_LIMIT]
+            filter_target = key
+
+            if upper_limit and lower_limit:
+                add_query = '{0} >= {1} >= {2}'.format(upper_limit, filter_target, lower_limit)
+                a_flg += 1
+            elif upper_limit:
+                add_query = '{0} >= {1}'.format(upper_limit, filter_target)
+                a_flg += 1
+            elif lower_limit:
+                add_query = '{0} >= {1}'.format(filter_target, lower_limit)
+                a_flg += 1
+
+            if b_flg != a_flg:
+                # 最後のラベル以外では、パイプを文字列に付与する
+                if itr == last:
+                    query = query + add_query
+                else:
+                    query = query + add_query + '|'
+                b_flg = a_flg
+            itr += 1
+
+        if b_flg == 0:
+            filtered_df = df_data
+        else:
+            filtered_df = filtered_df.query(query)
+
+        # 日付をfiltered_dfに結合する
+        filtered_df = pd.concat([date_df, filtered_df], axis=1, join='inner')
+
+        return filtered_df
+
+    def change_rate_stock_data(self,
+                               merged_df,
+                               target_label="",
+                               range_target_label="",
+                               upper_limit="",
+                               lower_limit=""):
         """
         description : 統合されたデータを変化率のデータに変換する
                     :   opening -> 開始値
@@ -95,33 +213,129 @@ class S3Stats:
                         positive -> positive 数
                         neutral -> neutral 数
                         negative -> negative 数
-        args        : merged_data -> センチメントデータと株価データの統合データ
+        args        : merged_df -> センチメントデータと株価データの統合データ(DataFrame)
+                    : target_label -> 取得するデータのリスト(指定しない場合、固定で取得)
+                        ex.  ['opening','closing', 'positive']
+                    : range_target_label -> upper_limitとlower_limitを適用するラベル
+                        ex.  ['positive']
+                    : upper_limit -> 上限（数値自体を含む）
+                    : lower_limit -> 下限（数値自体を含む）
         return      : changerate_data -> 変化率のデータ
+
         """
+        # ------------------
+        # 初期化
+        # ------------------
+        rtn = False
+
+        if target_label == "":
+            target_label = ['opening', 'closing',
+                            'positive', 'neutral', 'negative']
+
+        if range_target_label == "":
+            range_target_label = ['opening', 'closing',
+                                  'positive', 'neutral', 'negative']
+
+        # merged_dfから'date'列を取得
+        date_df = merged_df.loc[:, ['date']]
+
+        # ------------------
+        # チェック処理
+        # ------------------
+        # target_labelの中に、merged_dfにないラベルが含まれる場合エラー
+        hit_flg = 0
+        for target in target_label:
+            for column in merged_df:
+                if target == column:
+                    hit_flg = 1
+                    break
+
+            if hit_flg == 0:
+                return rtn
+            else:
+                hit_flg = 0
+
+        # 上下限チェック
+        if upper_limit != "" and lower_limit != "":
+            if upper_limit < lower_limit:
+                return rtn
+
+        # range_target_labelの中に、merged_dfにないラベルが含まれる場合エラー
+        hit_flg = 0
+        for target in range_target_label:
+            for column in merged_df:
+                if target == column:
+                    hit_flg = 1
+                    break
+
+            if hit_flg == 0:
+                return rtn
+            else:
+                hit_flg = 0
+
         # 必要な列を取得する
-        needed_data = merged_data.loc[:, ['opening', 'closing', 'positive', 'neutral', 'negative']]
+        needed_data = merged_df.loc[:, target_label]
         changerate_data = needed_data.pct_change()
 
         # pct_change()を利用することで、時点0のデータがNaNになるため、
         # 0で穴埋めする
         changerate_data = changerate_data.fillna(0)
 
+        # upper_limit　or lower_limitが設定されているとき、フィルタをかける
+        if upper_limit != "" or lower_limit != "":
+            # クエリ用文字列生成
+            query = ""
+            last = len(range_target_label) - 1
+            for range_target in range_target_label:
+                # upper_limitとlower_limitの入力によって生成するクエリ用文字列を分岐させる
+                if upper_limit == "":
+                    add_query = '{0} >= {1}'.format(range_target, lower_limit)
+                elif lower_limit == "":
+                    add_query = '{0} >= {1}'.format(upper_limit, range_target)
+                else:
+                    add_query = '{0} >= {1} >= {2}'.format(
+                        upper_limit, range_target, lower_limit)
+                query = query + add_query
+                # 最後のラベル以外では、パイプを文字列に付与する
+                if range_target != range_target_label[last]:
+                    query = query + '|'
+
+            # upper_limitとlower_limitから生成したquery用文字列を利用してデータをフィルタする
+            changerate_data = changerate_data.query(query)
+            # 日付をchangerate_dataに結合する
+            changerate_data = pd.concat(
+                [date_df, changerate_data], axis=1, join='inner')
+
         return changerate_data
 
-    def shift_data(self, data, shift_list, shift=-1):
+    def shift_data(self, data_df, shift_list, shift=-1):
         """
         description : dataを与えられた数値分ずらす
                     :  ※株価データを一日前倒しするために利用する想定
-        args        : data -> DataFrame
+        args        : data_df -> DataFrame
                     : shift_list -> ずらす対象のリスト
-                    : shift -> ずらす数値
-        return      : shiftedData -> ずらした後のデータ
+                    :   ex.  ['date', 'opening', 'closing']
+                    : shift -> ずらす日数
+        return      : shift_data -> ずらした後のデータ
         """
-        tmp = data.loc[:, shift_list].shift(shift)
-        data.loc[:, shift_list] = tmp
-        shiftedData = data.loc[:, shift_list]
+        rtn = False
 
-        return shiftedData
+        # shift_list の中にdata_dfにないデータが入っていないかチェック
+        flg = 0
+        for col_shift in shift_list:
+            for col_data in data_df:
+                if col_shift == col_data:
+                    flg += 1
+            if flg == 0:
+                return rtn
+            else:
+                flg = 0
+
+        tmp = data_df.loc[:, shift_list].shift(shift)
+        data_df.loc[:, shift_list] = tmp
+        shift_data = data_df[data_df[shift_list[0]].notnull()]
+
+        return shift_data
 
     def find_stock_na_date(self, stock_data):
         """
@@ -185,9 +399,10 @@ class S3Stats:
         for date in na_list:
             # 日付以外を初期化
             work_df_tmp = pd.DataFrame(
-                    [[date, 0, 0, 0, 0, 0, 0]],
-                    columns=['date', 'opening', 'high', 'low', 'closing', 'volume', 'adjustment']
-                )
+                [[date, 0, 0, 0, 0, 0, 0]],
+                columns=['date', 'opening', 'high', 'low',
+                         'closing', 'volume', 'adjustment']
+            )
             if fflg == 0:
                 work_df = work_df_tmp
                 fflg = 1
@@ -210,7 +425,8 @@ class S3Stats:
         # ------------------------------
         na_work_list = []
         na_work_idx = 0
-        target_label = ['opening', 'high', 'low', 'closing', 'volume', 'adjustment']
+        target_label = ['opening', 'high', 'low',
+                        'closing', 'volume', 'adjustment']
         for na_day in na_list:
             # na_work_listの最初の要素について、na_dayをna_work_listに追加して、イテレータを進める
             if (na_work_idx == 0):
@@ -228,9 +444,11 @@ class S3Stats:
                 # 補完処理
                 # -----------------------------
                 # na_work_list[0]の前日
-                pre_na_day = dc.DateAdd(dc.CharConv(na_work_list[0], mode=1), -1)
+                pre_na_day = dc.DateAdd(
+                    dc.CharConv(na_work_list[0], mode=1), -1)
                 # na_work_list[len(na_work_list) - 1] の翌日
-                next_na_day = dc.DateAdd(dc.CharConv(na_work_list[len(na_work_list) - 1], mode=1), 1)
+                next_na_day = dc.DateAdd(dc.CharConv(
+                    na_work_list[len(na_work_list) - 1], mode=1), 1)
                 # 線形補完の始点の日付(YYYY-MM-DD)
                 day_x0 = dc.DateConv(pre_na_day, mode=1)
                 # 線形補完の終点の日付(YYYY-MM-DD)
@@ -240,12 +458,15 @@ class S3Stats:
                 for day_x in na_work_list:
                     for label in target_label:
                         # 線形補完の始点の日付のインデックス
-                        x0 = stock_data[stock_data['date'] == day_x0].index.values
+                        x0 = stock_data[stock_data['date']
+                                        == day_x0].index.values
                         # 線形補完の終点の日付のインデックス
-                        x1 = stock_data[stock_data['date'] == day_x1].index.values
+                        x1 = stock_data[stock_data['date']
+                                        == day_x1].index.values
                         y0 = stock_data[stock_data['date'] == day_x0][label]
                         y1 = stock_data[stock_data['date'] == day_x1][label]
-                        x = stock_data[stock_data['date'] == day_x].index.values
+                        x = stock_data[stock_data['date']
+                                       == day_x].index.values
 
                         # 線形補完に必要な数値にアクセス
                         x0 = x0[0]
@@ -254,7 +475,7 @@ class S3Stats:
                         y1 = y1[y1.index.values[0]]
                         x = x[0]
                         y = self.calc_lerp(x0, x1, y0, y1, x)
-                        
+
                         # 四捨五入する場合は、インプットに応じて丸め処理
                         if not round_digit == "":
                             y = round(y, round_digit)
@@ -303,6 +524,7 @@ class S3Stats:
 
 class S3StatsCSV(S3Stats):
     """CSVデータ用のS3Statsの派生クラス"""
+
     def __init__(self, StockPath="", SentiPath=""):
         """Constructor"""
         super().__init__(StockPath, SentiPath)
@@ -317,11 +539,13 @@ class S3StatsCSV(S3Stats):
         """
         if mode == 0 or mode == 2:
             if not os.path.exists(self.StockPath):
-                self.emsg = '[:ERROR:]File not exists:{}'.format(self.StockPath)
+                self.emsg = '[:ERROR:]File not exists:{}'.format(
+                    self.StockPath)
                 return self.ERROR_STATUS, self.emsg
         if mode == 1 or mode == 2:
             if not os.path.exists(self.SentiPath):
-                self.emsg = '[:ERROR:]File not exists:{}'.format(self.SentiPath)
+                self.emsg = '[:ERROR:]File not exists:{}'.format(
+                    self.SentiPath)
                 return self.ERROR_STATUS, self.emsg
 
         return self.SUCCESS_STATUS
@@ -361,7 +585,8 @@ class S3StatsCSV(S3Stats):
                        'adjustment']
             )
         except Exception:
-            self.emsg = '[:ERROR:] {} で例外が発生しました。'.format(sys._getframe().f_code.co_name)
+            self.emsg = '[:ERROR:] {} で例外が発生しました。'.format(
+                sys._getframe().f_code.co_name)
             return self.ERROR_STATUS, self.emsg, traceback.print_exc()
 
         if not path == "":
@@ -371,7 +596,8 @@ class S3StatsCSV(S3Stats):
             if dc.DateCheck(start):
                 start = dc.DateUTime(start)
             else:
-                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(sys._getframe().f_code.co_name)
+                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(
+                    sys._getframe().f_code.co_name)
                 return self.ERROR_STATUS, self.emsg
             # start以降の日付のデータ取得
             stock_from_start = stock_data[stock_data['date'] >= start]
@@ -383,10 +609,12 @@ class S3StatsCSV(S3Stats):
                 # start と endをUnix形式にする
                 end = dc.DateUTime(end)
             else:
-                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(sys._getframe().f_code.co_name)
+                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(
+                    sys._getframe().f_code.co_name)
                 return self.ERROR_STATUS, self.emsg
             # end以前の日付のデータ取得
-            stock_from_start_by_end = stock_data[end >= stock_from_start['date']]
+            stock_from_start_by_end = stock_data[end >=
+                                                 stock_from_start['date']]
         else:
             stock_from_start_by_end = stock_from_start
 
@@ -424,7 +652,8 @@ class S3StatsCSV(S3Stats):
                        'negative']
             )
         except Exception:
-            self.emsg = '[:ERROR:] {} で例外が発生しました。'.format(sys._getframe().f_code.co_name)
+            self.emsg = '[:ERROR:] {} で例外が発生しました。'.format(
+                sys._getframe().f_code.co_name)
             return self.ERROR_STATUS, self.emsg
 
         if not path == "":
@@ -435,7 +664,8 @@ class S3StatsCSV(S3Stats):
                 # start以降の日付のデータ取得
                 senti_from_start = senti_data[senti_data['date'] >= start]
             else:
-                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(sys._getframe().f_code.co_name)
+                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(
+                    sys._getframe().f_code.co_name)
                 return self.ERROR_STATUS, self.emsg
         else:
             senti_from_start = senti_data
@@ -445,11 +675,13 @@ class S3StatsCSV(S3Stats):
                 # start と endをUnix形式にする
                 end = dc.DateUTime(end)
             else:
-                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(sys._getframe().f_code.co_name)
+                self.emsg = '[:ERROR:] {} でエラーが発生しました。'.format(
+                    sys._getframe().f_code.co_name)
                 return self.ERROR_STATUS, self.emsg
 
             # end以前の日付のデータ取得
-            senti_from_start_by_end = senti_data[end >= senti_from_start['date']]
+            senti_from_start_by_end = senti_data[end >=
+                                                 senti_from_start['date']]
         else:
             senti_from_start_by_end = senti_from_start
 
@@ -493,6 +725,7 @@ class S3StatsCSV(S3Stats):
         stock_data = self.comp_stock_na(stock_data, na_list, round_digit=1)
 
         return stock_data
+
 
 # //////////////
 # //   TEST   //

@@ -15,15 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
 import s3.views as s3_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', s3_view.index, name='index'),
     path('dashboard/', s3_view.DashboardView.as_view()),
     path('code_master/', s3_view.MasterListView.as_view()),
     path('code_master/<int:query_code>/', s3_view.DataListView.as_view()),
     path('stock_list/', s3_view.StockListFullView.as_view()),
     path('sentiment_list/', s3_view.SentimentListView.as_view()),
-    # path('', s3_view.index.as_view()),
+    path('settings/', s3_view.SettingsView.as_view()),
 ]
