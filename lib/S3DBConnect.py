@@ -31,17 +31,17 @@ def get_db_object(pjname, tbl_name):
 
     django.setup()
 
-    from s3.models import Code_Master, Stock, Sentiment
+    from s3.models import User_Master, Vital, Sentiment
 
     if tbl_name == TBL_CODE_MASTER_NAME:
         try:
-            tbl = Code_Master.objects.all()
+            tbl = User_Master.objects.all()
         except:
             print("[:ERROR:] getting table data failed")
             return
     elif tbl_name == TBL_STOCK_NAME:
         try:
-            tbl = Stock.objects.all()
+            tbl = Vital.objects.all()
         except:
             print("[:ERROR:] getting table data failed")
             return
@@ -79,12 +79,12 @@ def update_or_insert_stock_data(pjname, tbl_name, stock_data, stock_code):
 
     django.setup()
 
-    from s3.models import Stock
+    from s3.models import Vital
 
     if tbl_name == TBL_STOCK_NAME:
         try:
             for i in range(len(stock_data)):
-                rtn = Stock.objects.update_or_create(
+                rtn = Vital.objects.update_or_create(
                     code=stock_code,
                     date=stock_data['date'][i],
                     opening=stock_data['opening'][i],

@@ -11,10 +11,10 @@ def setting_Django():
 
     django.setup()
 
-    from s3.models import Code_Master, Stock, Sentiment
+    from s3.models import User_Master, Vital, Sentiment
 
     print("connect OK")
-    c = Stock.objects.all()
+    c = Vital.objects.all()
     print(c)
 
     """
@@ -32,7 +32,7 @@ def setting_Django():
     )
 
     for i in range(len(code_master)):
-        Code_Master.objects.create(
+        User_Master.objects.create(
            code=code_master['code'][i],
            jp_name=code_master['jp_name'][i],
            en_name=code_master['en_name'][i],

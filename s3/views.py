@@ -23,9 +23,9 @@ class DashboardView(TemplateView):
     def get(self, request, *args, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
         # コードマスタから、照会されているデータだけ抽出する
-        code_master = Code_Master.objects.filter(code=9984)
+        code_master = User_Master.objects.filter(code=9984)
         # 株価データから、照会されているデータだけ抽出する
-        stock = Stock.objects.filter(code=9984, date__gte='2018-11-01')  # DBからオブジェクトを取得
+        stock = Vital.objects.filter(code=9984, date__gte='2018-11-01')  # DBからオブジェクトを取得
 
         # 日本語名を取得
         for cd in code_master:
@@ -42,7 +42,7 @@ class MasterListView(TemplateView):
     def get(self, request, *args, **kwargs):
         context = super(MasterListView, self).get_context_data(**kwargs)
 
-        code_master = Code_Master.objects.all()  # DBからオブジェクトを取得
+        code_master = User_Master.objects.all()  # DBからオブジェクトを取得
         # workers = Worker.objects.filter(person__sex=Person.MAN)
         context['code_master'] = code_master  # 別の入れ物に入れる
 
@@ -54,13 +54,13 @@ class DataListView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         context = super(DataListView, self).get_context_data(**kwargs)
-        code_master = Code_Master.objects.filter(code=kwargs['query_cod'])
+        code_master = User_Master.objects.filter(code=kwargs['query_cod'])
 
     def get(self, request, *args, **kwargs):
         context = super(DataListView, self).get_context_data(**kwargs)
         # コードマスタから、照会されているデータだけ抽出する
-        code_master = Code_Master.objects.filter(code=kwargs['query_code'])
-        stock = Stock.objects.filter(code=kwargs['query_code'])
+        code_master = User_Master.objects.filter(code=kwargs['query_code'])
+        stock = Vital.objects.filter(code=kwargs['query_code'])
         sentiment = Sentiment.objects.filter(code=kwargs['query_code'])
 
         # pandas.DataFrameに変換
@@ -205,7 +205,7 @@ class StockListFullView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = super(StockListFullView, self).get_context_data(**kwargs)
-        stock = Stock.objects.all()
+        stock = Vital.objects.all()
 
         context['stock'] = stock
 

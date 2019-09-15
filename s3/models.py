@@ -2,7 +2,7 @@ from django.db import models
 
 
 # Create your models here.
-class Code_Master(models.Model):
+class User_Master(models.Model):
     """
     description: 管理対象銘柄のマスタ
     """
@@ -14,7 +14,7 @@ class Code_Master(models.Model):
     en_name = models.CharField(max_length=128)
 
 
-class Stock(models.Model):
+class Vital(models.Model):
     """
     description: 管理対象銘柄の株価データ
     """
